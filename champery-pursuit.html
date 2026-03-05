@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Champéry Pursuit">
+<meta name="theme-color" content="#0b0b1a">
+<title>Champéry Pursuit</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230b0b1a'/><text x='50' y='62' font-size='50' text-anchor='middle'>🎲</text></svg>">
+<link rel="manifest" href="data:application/json,{%22name%22:%22Champ%C3%A9ry%20Pursuit%22,%22short_name%22:%22Champ%C3%A9ry%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230b0b1a%22,%22theme_color%22:%22%230b0b1a%22}">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body,#root{height:100%;width:100%}
+  body{background:#0b0b1a;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+  /* Safe area padding for notch devices */
+  #root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+
+
+const QUESTIONS = [
+{c:"Geography",q:"What is the capital of Australia?",a:"Canberra",d:"easy",w:["Sydney", "Melbourne", "Canberra", "Brisbane"]},
+{c:"Geography",q:"Which country is shaped like a boot?",a:"Italy",d:"easy",w:["Italy", "Greece", "Portugal", "Chile"]},
+{c:"Geography",q:"What is the official language of Brazil?",a:"Portuguese",d:"easy",w:["Spanish", "Portuguese", "French", "English"]},
+{c:"Geography",q:"Which country is the Land of the Rising Sun?",a:"Japan",d:"easy",w:["China", "Japan", "South Korea", "Thailand"]},
+{c:"Geography",q:"In which ocean is Madagascar?",a:"Indian Ocean",d:"easy",w:["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"]},
+{c:"Geography",q:"Which country is home to Machu Picchu?",a:"Peru",d:"easy",w:["Bolivia", "Peru", "Colombia", "Ecuador"]},
+{c:"Geography",q:"What is the tallest mountain in Africa?",a:"Mount Kilimanjaro",d:"easy",w:["Mount Kenya", "Mount Kilimanjaro", "Atlas Mountains", "Drakensberg"]},
+{c:"Geography",q:"What is the capital of Thailand?",a:"Bangkok",d:"easy",w:["Bangkok", "Hanoi", "Jakarta", "Manila"]},
+{c:"Science",q:"What planet is known as the Red Planet?",a:"Mars",d:"easy",w:["Venus", "Mars", "Jupiter", "Saturn"]},
+{c:"Science",q:"What is the chemical formula for water?",a:"H2O",d:"easy",w:["CO2", "H2O", "NaCl", "O2"]},
+{c:"Science",q:"What is the largest organ in the human body?",a:"Skin",d:"easy",w:["Liver", "Skin", "Heart", "Lungs"]},
+{c:"Science",q:"What force keeps planets in orbit?",a:"Gravity",d:"easy",w:["Magnetism", "Gravity", "Friction", "Inertia"]},
+{c:"Science",q:"What does DNA stand for?",a:"Deoxyribonucleic acid",d:"easy",w:["Deoxyribonucleic acid", "Dynamic Nuclear Arrangement", "Dual Nitrogen Assembly", "Digital Nucleic Algorithm"]},
+{c:"Science",q:"What is the powerhouse of the cell?",a:"Mitochondria",d:"easy",w:["Nucleus", "Mitochondria", "Ribosome", "Chloroplast"]},
+{c:"Science",q:"What vitamin does skin produce from sunlight?",a:"Vitamin D",d:"easy",w:["Vitamin A", "Vitamin C", "Vitamin D", "Vitamin B12"]},
+{c:"Science",q:"What metal is liquid at room temperature?",a:"Mercury",d:"easy",w:["Lead", "Mercury", "Aluminum", "Tin"]},
+{c:"History",q:"Who first walked on the Moon?",a:"Neil Armstrong",d:"easy",w:["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "John Glenn"]},
+{c:"History",q:"In which year did the Titanic sink?",a:"1912",d:"easy",w:["1905", "1912", "1918", "1920"]},
+{c:"History",q:"What year did World War II end?",a:"1945",d:"easy",w:["1943", "1944", "1945", "1946"]},
+{c:"History",q:"Which empire was ruled by Genghis Khan?",a:"Mongol Empire",d:"easy",w:["Ottoman Empire", "Mongol Empire", "Roman Empire", "Persian Empire"]},
+{c:"History",q:"What civilization built the Giza pyramids?",a:"Ancient Egyptians",d:"easy",w:["Romans", "Greeks", "Ancient Egyptians", "Persians"]},
+{c:"History",q:"Who was the first female UK Prime Minister?",a:"Margaret Thatcher",d:"easy",w:["Margaret Thatcher", "Theresa May", "Queen Victoria", "Indira Gandhi"]},
+{c:"History",q:"What civilization built Machu Picchu?",a:"The Inca Empire",d:"easy",w:["The Aztecs", "The Maya", "The Inca Empire", "The Olmecs"]},
+{c:"History",q:"Who painted the Sistine Chapel ceiling?",a:"Michelangelo",d:"easy",w:["Leonardo da Vinci", "Raphael", "Michelangelo", "Donatello"]},
+{c:"Entertainment",q:"Who directed Pulp Fiction?",a:"Quentin Tarantino",d:"easy",w:["Martin Scorsese", "Quentin Tarantino", "David Fincher", "Steven Spielberg"]},
+{c:"Entertainment",q:"Who played Jack Dawson in Titanic?",a:"Leonardo DiCaprio",d:"easy",w:["Brad Pitt", "Leonardo DiCaprio", "Matt Damon", "Tom Cruise"]},
+{c:"Entertainment",q:"What fictional country is Black Panther from?",a:"Wakanda",d:"easy",w:["Wakanda", "Genovia", "Latveria", "Zamunda"]},
+{c:"Entertainment",q:"In The Matrix, what pill does Neo take?",a:"Red",d:"easy",w:["Blue", "Red", "Green", "Yellow"]},
+{c:"Entertainment",q:"Who voiced Woody in Toy Story?",a:"Tom Hanks",d:"easy",w:["Tom Hanks", "Tim Allen", "Robin Williams", "Billy Crystal"]},
+{c:"Entertainment",q:"Who is known as the King of Pop?",a:"Michael Jackson",d:"easy",w:["Elvis Presley", "Michael Jackson", "Prince", "Freddie Mercury"]},
+{c:"Entertainment",q:"What Nintendo character is a plumber?",a:"Mario",d:"easy",w:["Link", "Mario", "Donkey Kong", "Kirby"]},
+{c:"Entertainment",q:"In which city does Friends take place?",a:"New York City",d:"easy",w:["Los Angeles", "New York City", "Chicago", "Boston"]},
+{c:"Sports",q:"How many players on a soccer team?",a:"11",d:"easy",w:["9", "10", "11", "12"]},
+{c:"Sports",q:"How many rings on the Olympic flag?",a:"5",d:"easy",w:["4", "5", "6", "7"]},
+{c:"Sports",q:"What sport is played at Wimbledon?",a:"Tennis",d:"easy",w:["Cricket", "Tennis", "Golf", "Rugby"]},
+{c:"Sports",q:"What sport uses birdie, eagle, and bogey?",a:"Golf",d:"easy",w:["Tennis", "Badminton", "Golf", "Cricket"]},
+{c:"Sports",q:"In swimming, what stroke is face-up?",a:"Backstroke",d:"easy",w:["Freestyle", "Backstroke", "Butterfly", "Breaststroke"]},
+{c:"Sports",q:"What is the NHL champion trophy?",a:"Stanley Cup",d:"easy",w:["Stanley Cup", "Larry OBrien Trophy", "Vince Lombardi Trophy", "Claret Jug"]},
+{c:"Sports",q:"What sport is the beautiful game?",a:"Football (soccer)",d:"easy",w:["Basketball", "Football (soccer)", "Rugby", "Cricket"]},
+{c:"Art & Culture",q:"Who painted the Mona Lisa?",a:"Leonardo da Vinci",d:"easy",w:["Michelangelo", "Leonardo da Vinci", "Raphael", "Donatello"]},
+{c:"Art & Culture",q:"What instrument has 88 keys?",a:"Piano",d:"easy",w:["Organ", "Piano", "Harpsichord", "Accordion"]},
+{c:"Art & Culture",q:"Who painted The Starry Night?",a:"Vincent van Gogh",d:"easy",w:["Monet", "Van Gogh", "Picasso", "Dali"]},
+{c:"Art & Culture",q:"What is Japanese paper folding called?",a:"Origami",d:"easy",w:["Ikebana", "Origami", "Bonsai", "Sumi-e"]},
+{c:"Art & Culture",q:"Who composed Fur Elise?",a:"Beethoven",d:"easy",w:["Mozart", "Beethoven", "Bach", "Chopin"]},
+{c:"Art & Culture",q:"What is the largest art museum?",a:"The Louvre",d:"easy",w:["The Met", "The Louvre", "British Museum", "Hermitage"]},
+{c:"Food & Drink",q:"What is the main ingredient in guacamole?",a:"Avocado",d:"easy",w:["Tomato", "Avocado", "Lime", "Pepper"]},
+{c:"Food & Drink",q:"What spirit is made from juniper berries?",a:"Gin",d:"easy",w:["Vodka", "Gin", "Rum", "Whiskey"]},
+{c:"Food & Drink",q:"What country does sushi come from?",a:"Japan",d:"easy",w:["China", "Japan", "South Korea", "Thailand"]},
+{c:"Food & Drink",q:"What bean is chocolate made from?",a:"Cacao bean",d:"easy",w:["Coffee bean", "Cacao bean", "Vanilla bean", "Soy bean"]},
+{c:"Food & Drink",q:"What is the main spirit in a Margarita?",a:"Tequila",d:"easy",w:["Vodka", "Rum", "Tequila", "Gin"]},
+{c:"Food & Drink",q:"What country is the Mojito from?",a:"Cuba",d:"easy",w:["Mexico", "Cuba", "Brazil", "Spain"]},
+{c:"Technology",q:"What does HTTP stand for?",a:"HyperText Transfer Protocol",d:"easy",w:["HyperText Transfer Protocol", "High Tech Transfer Program", "Hyper Terminal Text Process", "Home Tool Transfer Protocol"]},
+{c:"Technology",q:"What does USB stand for?",a:"Universal Serial Bus",d:"easy",w:["Universal Serial Bus", "Ultra Speed Bandwidth", "Unified System Bridge", "Universal System Byte"]},
+{c:"Technology",q:"What company makes PlayStation?",a:"Sony",d:"easy",w:["Nintendo", "Sony", "Microsoft", "Sega"]},
+{c:"Technology",q:"Who founded Amazon?",a:"Jeff Bezos",d:"easy",w:["Elon Musk", "Jeff Bezos", "Bill Gates", "Mark Zuckerberg"]},
+{c:"Technology",q:"What does RAM stand for?",a:"Random Access Memory",d:"easy",w:["Random Access Memory", "Read And Modify", "Rapid Application Module", "Remote Area Memory"]},
+{c:"Technology",q:"What does HTML stand for?",a:"HyperText Markup Language",d:"easy",w:["HyperText Markup Language", "High Tech Modern Language", "Home Tool Management Layer", "Hybrid Text Machine Learning"]},
+{c:"Nature",q:"What is the largest animal on Earth?",a:"Blue whale",d:"easy",w:["African elephant", "Blue whale", "Colossal squid", "Giraffe"]},
+{c:"Nature",q:"What is the fastest land animal?",a:"Cheetah",d:"easy",w:["Lion", "Cheetah", "Gazelle", "Horse"]},
+{c:"Nature",q:"What is the only mammal that can fly?",a:"Bat",d:"easy",w:["Flying squirrel", "Bat", "Sugar glider", "Colugo"]},
+{c:"Nature",q:"What is a group of lions called?",a:"A pride",d:"easy",w:["A pack", "A pride", "A flock", "A herd"]},
+{c:"Nature",q:"How many legs does a spider have?",a:"8",d:"easy",w:["6", "8", "10", "12"]},
+{c:"Nature",q:"What is the primary diet of a panda?",a:"Bamboo",d:"easy",w:["Fish", "Bamboo", "Berries", "Insects"]},
+{c:"Nature",q:"What is a group of wolves called?",a:"A pack",d:"easy",w:["A pride", "A flock", "A pack", "A swarm"]},
+{c:"Literature",q:"Who wrote Romeo and Juliet?",a:"William Shakespeare",d:"easy",w:["Charles Dickens", "William Shakespeare", "Jane Austen", "Oscar Wilde"]},
+{c:"Literature",q:"What is the wizard school in Harry Potter?",a:"Hogwarts",d:"easy",w:["Hogwarts", "Beauxbatons", "Durmstrang", "Ilvermorny"]},
+{c:"Literature",q:"Who created Sherlock Holmes?",a:"Arthur Conan Doyle",d:"easy",w:["Agatha Christie", "Arthur Conan Doyle", "Charles Dickens", "Edgar Allan Poe"]},
+{c:"Literature",q:"Who wrote The Little Prince?",a:"Antoine de Saint-Exupery",d:"easy",w:["Victor Hugo", "Antoine de Saint-Exupery", "Albert Camus", "Jules Verne"]},
+{c:"Literature",q:"Who wrote To Kill a Mockingbird?",a:"Harper Lee",d:"easy",w:["Harper Lee", "Mark Twain", "John Steinbeck", "F. Scott Fitzgerald"]},
+{c:"Literature",q:"What Dickens novel features Scrooge?",a:"A Christmas Carol",d:"easy",w:["Oliver Twist", "A Christmas Carol", "Great Expectations", "David Copperfield"]},
+{c:"Geography",q:"Which river flows through the most European capitals?",a:"The Danube (4 capitals)",d:"medium",w:["The Rhine", "The Danube", "The Thames", "The Seine"]},
+{c:"Geography",q:"What is the deepest lake in the world?",a:"Lake Baikal",d:"medium",w:["Lake Superior", "Lake Baikal", "Caspian Sea", "Lake Tanganyika"]},
+{c:"Geography",q:"Which strait separates Spain from Morocco?",a:"Strait of Gibraltar",d:"medium",w:["Strait of Gibraltar", "Strait of Hormuz", "Bosphorus", "Strait of Malacca"]},
+{c:"Geography",q:"What mountain range separates Europe from Asia?",a:"The Ural Mountains",d:"medium",w:["The Alps", "The Ural Mountains", "The Caucasus", "The Carpathians"]},
+{c:"Geography",q:"Which European country has the most UNESCO sites?",a:"Italy",d:"medium",w:["France", "Spain", "Italy", "Germany"]},
+{c:"Geography",q:"Which African nation has the largest population?",a:"Nigeria",d:"medium",w:["Ethiopia", "Nigeria", "Egypt", "South Africa"]},
+{c:"Geography",q:"What is the longest mountain range on Earth?",a:"The Andes",d:"medium",w:["The Himalayas", "The Andes", "The Rockies", "The Alps"]},
+{c:"Geography",q:"What is the largest island in the Mediterranean?",a:"Sicily",d:"medium",w:["Sardinia", "Sicily", "Crete", "Cyprus"]},
+{c:"Geography",q:"Which country has the longest coastline?",a:"Canada",d:"medium",w:["Australia", "Canada", "Indonesia", "Russia"]},
+{c:"Science",q:"How many bones in the adult human body?",a:"206",d:"medium",w:["196", "206", "216", "226"]},
+{c:"Science",q:"What gas makes up 78% of Earths atmosphere?",a:"Nitrogen",d:"medium",w:["Oxygen", "Nitrogen", "Carbon dioxide", "Argon"]},
+{c:"Science",q:"What organ produces insulin?",a:"Pancreas",d:"medium",w:["Liver", "Pancreas", "Kidney", "Spleen"]},
+{c:"Science",q:"How many chromosomes do humans have?",a:"46 (23 pairs)",d:"medium",w:["42", "44", "46", "48"]},
+{c:"Science",q:"What is the smallest bone in the body?",a:"Stapes (in the ear)",d:"medium",w:["Stapes", "Incus", "Phalanx", "Coccyx"]},
+{c:"Science",q:"How long does sunlight take to reach Earth?",a:"About 8 minutes",d:"medium",w:["About 1 minute", "About 8 minutes", "About 30 minutes", "About 1 hour"]},
+{c:"Science",q:"What causes the Northern Lights?",a:"Solar wind hitting Earths magnetosphere",d:"medium",w:["Reflection of moonlight", "Solar wind hitting magnetosphere", "Volcanic gases", "Ocean bioluminescence"]},
+{c:"Science",q:"What is the unit of electrical resistance?",a:"Ohm",d:"medium",w:["Watt", "Ohm", "Volt", "Ampere"]},
+{c:"Science",q:"What planet rotates on its side?",a:"Uranus",d:"medium",w:["Neptune", "Uranus", "Saturn", "Venus"]},
+{c:"History",q:"What treaty ended WWI with Germany in 1919?",a:"Treaty of Versailles",d:"medium",w:["Treaty of Paris", "Treaty of Versailles", "Treaty of Vienna", "Treaty of Ghent"]},
+{c:"History",q:"What event started World War I?",a:"Assassination of Archduke Franz Ferdinand",d:"medium",w:["Assassination of Franz Ferdinand", "Sinking of the Lusitania", "Invasion of Poland", "Treaty of Versailles"]},
+{c:"History",q:"What year did the French Revolution begin?",a:"1789",d:"medium",w:["1776", "1789", "1799", "1804"]},
+{c:"History",q:"Who was the first Emperor of Rome?",a:"Augustus",d:"medium",w:["Julius Caesar", "Augustus", "Nero", "Tiberius"]},
+{c:"History",q:"Which battle was Napoleons final defeat?",a:"Battle of Waterloo",d:"medium",w:["Battle of Trafalgar", "Battle of Waterloo", "Battle of Austerlitz", "Battle of Leipzig"]},
+{c:"History",q:"In which year did the Soviet Union dissolve?",a:"1991",d:"medium",w:["1989", "1990", "1991", "1993"]},
+{c:"History",q:"Who led the Bolshevik Revolution in 1917?",a:"Vladimir Lenin",d:"medium",w:["Joseph Stalin", "Vladimir Lenin", "Leon Trotsky", "Karl Marx"]},
+{c:"History",q:"What was Darwins ship called?",a:"HMS Beagle",d:"medium",w:["HMS Victory", "HMS Beagle", "HMS Endeavour", "HMS Bounty"]},
+{c:"History",q:"What year was the Chernobyl disaster?",a:"1986",d:"medium",w:["1984", "1986", "1988", "1990"]},
+{c:"Entertainment",q:"At what speed must the DeLorean travel in Back to the Future?",a:"88 mph",d:"medium",w:["65 mph", "77 mph", "88 mph", "100 mph"]},
+{c:"Entertainment",q:"What band released Creep in 1992?",a:"Radiohead",d:"medium",w:["Nirvana", "Radiohead", "Oasis", "Blur"]},
+{c:"Entertainment",q:"What is Walter Whites alias in Breaking Bad?",a:"Heisenberg",d:"medium",w:["Heisenberg", "The Cook", "Mr. White", "Danger"]},
+{c:"Entertainment",q:"What is the best-selling video game of all time?",a:"Minecraft",d:"medium",w:["GTA V", "Tetris", "Minecraft", "Wii Sports"]},
+{c:"Entertainment",q:"Who composed the Star Wars music?",a:"John Williams",d:"medium",w:["Hans Zimmer", "John Williams", "Howard Shore", "James Horner"]},
+{c:"Entertainment",q:"What band made Dark Side of the Moon?",a:"Pink Floyd",d:"medium",w:["Led Zeppelin", "Pink Floyd", "The Beatles", "Rolling Stones"]},
+{c:"Entertainment",q:"What metal is Captain Americas shield made of?",a:"Vibranium",d:"medium",w:["Adamantium", "Vibranium", "Uru", "Carbonadium"]},
+{c:"Entertainment",q:"What was the first Disney animated feature?",a:"Snow White (1937)",d:"medium",w:["Bambi", "Snow White", "Pinocchio", "Fantasia"]},
+{c:"Entertainment",q:"Who directed Schindlers List?",a:"Steven Spielberg",d:"medium",w:["Martin Scorsese", "Steven Spielberg", "Coppola", "Ridley Scott"]},
+{c:"Sports",q:"How long is a marathon in miles?",a:"26.2 miles",d:"medium",w:["24.8", "25.5", "26.2", "27.0"]},
+{c:"Sports",q:"Who has the most Olympic gold medals?",a:"Michael Phelps (23)",d:"medium",w:["Usain Bolt", "Michael Phelps", "Carl Lewis", "Mark Spitz"]},
+{c:"Sports",q:"What is the only Grand Slam on clay?",a:"French Open (Roland Garros)",d:"medium",w:["French Open", "Australian Open", "US Open", "Wimbledon"]},
+{c:"Sports",q:"Who holds the 100m world record?",a:"Usain Bolt (9.58s)",d:"medium",w:["Carl Lewis", "Usain Bolt", "Tyson Gay", "Yohan Blake"]},
+{c:"Sports",q:"Who is the NBAs all-time leading scorer?",a:"LeBron James",d:"medium",w:["Kareem Abdul-Jabbar", "LeBron James", "Michael Jordan", "Kobe Bryant"]},
+{c:"Sports",q:"How many players on a rugby union team?",a:"15",d:"medium",w:["11", "13", "15", "17"]},
+{c:"Sports",q:"What is the oldest Grand Slam tournament?",a:"Wimbledon (1877)",d:"medium",w:["Wimbledon", "French Open", "US Open", "Australian Open"]},
+{c:"Sports",q:"In boxing, what does TKO stand for?",a:"Technical Knockout",d:"medium",w:["Total Knockout", "Technical Knockout", "Timed Knockout", "Tactical Knockout"]},
+{c:"Art & Culture",q:"Who painted Girl with a Pearl Earring?",a:"Johannes Vermeer",d:"medium",w:["Rembrandt", "Johannes Vermeer", "Jan van Eyck", "Frans Hals"]},
+{c:"Art & Culture",q:"What art movement is Dali associated with?",a:"Surrealism",d:"medium",w:["Cubism", "Surrealism", "Impressionism", "Expressionism"]},
+{c:"Art & Culture",q:"Who composed the Four Seasons?",a:"Antonio Vivaldi",d:"medium",w:["Bach", "Vivaldi", "Mozart", "Handel"]},
+{c:"Art & Culture",q:"Who sculpted The Thinker?",a:"Auguste Rodin",d:"medium",w:["Michelangelo", "Auguste Rodin", "Bernini", "Donatello"]},
+{c:"Art & Culture",q:"Who painted Guernica?",a:"Pablo Picasso",d:"medium",w:["Salvador Dali", "Pablo Picasso", "Joan Miro", "Diego Rivera"]},
+{c:"Art & Culture",q:"Who composed Swan Lake?",a:"Tchaikovsky",d:"medium",w:["Mozart", "Tchaikovsky", "Stravinsky", "Prokofiev"]},
+{c:"Art & Culture",q:"What movement emphasized painting outdoors?",a:"Impressionism",d:"medium",w:["Romanticism", "Impressionism", "Realism", "Baroque"]},
+{c:"Food & Drink",q:"What is the most expensive spice by weight?",a:"Saffron",d:"medium",w:["Vanilla", "Saffron", "Cardamom", "Cinnamon"]},
+{c:"Food & Drink",q:"What country is Gruyere cheese from?",a:"Switzerland",d:"medium",w:["France", "Switzerland", "Netherlands", "Italy"]},
+{c:"Food & Drink",q:"What Italian dish is thinly sliced raw meat?",a:"Carpaccio",d:"medium",w:["Bruschetta", "Carpaccio", "Tartare", "Prosciutto"]},
+{c:"Food & Drink",q:"What nut is marzipan made from?",a:"Almonds",d:"medium",w:["Hazelnuts", "Almonds", "Pistachios", "Cashews"]},
+{c:"Food & Drink",q:"What does IPA stand for in beer?",a:"India Pale Ale",d:"medium",w:["India Pale Ale", "International Pilsner Assoc", "Irish Porter Ale", "Intense Premium Ale"]},
+{c:"Food & Drink",q:"What is a sommelier?",a:"A trained wine professional",d:"medium",w:["A trained wine professional", "A pastry chef", "A cheese maker", "A head waiter"]},
+{c:"Food & Drink",q:"What is ceviche?",a:"Raw fish cured in citrus juice",d:"medium",w:["Grilled seafood stew", "Raw fish cured in citrus juice", "Fried calamari", "Smoked fish salad"]},
+{c:"Food & Drink",q:"What French mother sauce uses roux and milk?",a:"Bechamel",d:"medium",w:["Veloute", "Bechamel", "Hollandaise", "Espagnole"]},
+{c:"Technology",q:"In what year was Google founded?",a:"1998",d:"medium",w:["1996", "1997", "1998", "2000"]},
+{c:"Technology",q:"Who is the father of computer science?",a:"Alan Turing",d:"medium",w:["Charles Babbage", "Alan Turing", "John von Neumann", "Ada Lovelace"]},
+{c:"Technology",q:"What language was created by Guido van Rossum?",a:"Python",d:"medium",w:["Java", "Python", "Ruby", "PHP"]},
+{c:"Technology",q:"What year was the World Wide Web invented?",a:"1989",d:"medium",w:["1985", "1989", "1991", "1993"]},
+{c:"Technology",q:"Who created Linux?",a:"Linus Torvalds",d:"medium",w:["Richard Stallman", "Linus Torvalds", "Dennis Ritchie", "Ken Thompson"]},
+{c:"Technology",q:"What does API stand for?",a:"Application Programming Interface",d:"medium",w:["Application Programming Interface", "Automated Process Integration", "Advanced Program Interaction", "Applied Protocol Interface"]},
+{c:"Technology",q:"What company owns Instagram?",a:"Meta (Facebook)",d:"medium",w:["Google", "Meta", "Twitter", "Snapchat"]},
+{c:"Nature",q:"How many hearts does an octopus have?",a:"3",d:"medium",w:["1", "2", "3", "4"]},
+{c:"Nature",q:"What is the largest species of shark?",a:"Whale shark",d:"medium",w:["Great white", "Whale shark", "Hammerhead", "Tiger shark"]},
+{c:"Nature",q:"What is the tallest waterfall in the world?",a:"Angel Falls",d:"medium",w:["Niagara Falls", "Angel Falls", "Victoria Falls", "Iguazu Falls"]},
+{c:"Nature",q:"What is the fastest bird in a dive?",a:"Peregrine falcon",d:"medium",w:["Bald eagle", "Peregrine falcon", "Golden eagle", "Gyrfalcon"]},
+{c:"Nature",q:"What is the only bird that can fly backwards?",a:"Hummingbird",d:"medium",w:["Hummingbird", "Kingfisher", "Swift", "Swallow"]},
+{c:"Nature",q:"What causes the tides?",a:"Gravitational pull of the Moon",d:"medium",w:["Earths rotation", "Gravitational pull of the Moon", "Ocean currents", "Wind patterns"]},
+{c:"Nature",q:"What is the deepest point in the ocean?",a:"Challenger Deep (Mariana Trench)",d:"medium",w:["Tonga Trench", "Challenger Deep", "Puerto Rico Trench", "Java Trench"]},
+{c:"Literature",q:"Who wrote Don Quixote?",a:"Miguel de Cervantes",d:"medium",w:["Cervantes", "Garcia Marquez", "Garcia Lorca", "Borges"]},
+{c:"Literature",q:"In which novel does Jay Gatsby appear?",a:"The Great Gatsby",d:"medium",w:["The Great Gatsby", "Tender Is the Night", "The Sun Also Rises", "Of Mice and Men"]},
+{c:"Literature",q:"Who wrote Crime and Punishment?",a:"Fyodor Dostoevsky",d:"medium",w:["Leo Tolstoy", "Dostoevsky", "Anton Chekhov", "Nikolai Gogol"]},
+{c:"Literature",q:"What pen name did Samuel Clemens use?",a:"Mark Twain",d:"medium",w:["O. Henry", "Mark Twain", "Lewis Carroll", "George Orwell"]},
+{c:"Literature",q:"Who wrote One Hundred Years of Solitude?",a:"Gabriel Garcia Marquez",d:"medium",w:["Garcia Marquez", "Isabel Allende", "Vargas Llosa", "Paulo Coelho"]},
+{c:"Literature",q:"What novel begins with Call me Ishmael?",a:"Moby-Dick",d:"medium",w:["Moby-Dick", "The Old Man and the Sea", "Treasure Island", "Robinson Crusoe"]},
+{c:"Literature",q:"Who wrote The Stranger (L Etranger)?",a:"Albert Camus",d:"medium",w:["Jean-Paul Sartre", "Albert Camus", "Simone de Beauvoir", "Victor Hugo"]},
+{c:"Geography",q:"What is the highest capital city in the world?",a:"La Paz, Bolivia",d:"hard",w:["Quito", "La Paz", "Bogota", "Addis Ababa"]},
+{c:"Geography",q:"Which country has the most time zones?",a:"France (12)",d:"hard",w:["Russia", "France", "USA", "UK"]},
+{c:"Geography",q:"What is the largest landlocked country?",a:"Kazakhstan",d:"hard",w:["Mongolia", "Kazakhstan", "Chad", "Ethiopia"]},
+{c:"Geography",q:"What is the northernmost capital city?",a:"Reykjavik, Iceland",d:"hard",w:["Helsinki", "Reykjavik", "Oslo", "Tallinn"]},
+{c:"Geography",q:"Which countrys flag is the only non-rectangular?",a:"Nepal",d:"hard",w:["Switzerland", "Nepal", "Vatican City", "Bhutan"]},
+{c:"Geography",q:"Which country is surrounded by South Africa?",a:"Lesotho",d:"hard",w:["Eswatini", "Lesotho", "Malawi", "Botswana"]},
+{c:"Geography",q:"Which city is built on 14 islands?",a:"Stockholm",d:"hard",w:["Venice", "Stockholm", "Amsterdam", "Copenhagen"]},
+{c:"Geography",q:"What is the capital of Mongolia?",a:"Ulaanbaatar",d:"hard",w:["Ulaanbaatar", "Astana", "Bishkek", "Tashkent"]},
+{c:"Science",q:"What element has the symbol W?",a:"Tungsten (Wolfram)",d:"hard",w:["Tungsten", "Titanium", "Thallium", "Tantalum"]},
+{c:"Science",q:"What is absolute zero in Celsius?",a:"-273.15 C",d:"hard",w:["-273.15 C", "-260.00 C", "-300.00 C", "-246.50 C"]},
+{c:"Science",q:"What is the most electronegative element?",a:"Fluorine",d:"hard",w:["Chlorine", "Fluorine", "Oxygen", "Nitrogen"]},
+{c:"Science",q:"What is the densest natural element?",a:"Osmium",d:"hard",w:["Lead", "Osmium", "Platinum", "Gold"]},
+{c:"Science",q:"What is the study of fungi called?",a:"Mycology",d:"hard",w:["Botany", "Mycology", "Virology", "Entomology"]},
+{c:"Science",q:"What element has atomic number 79?",a:"Gold (Au)",d:"hard",w:["Silver", "Gold", "Platinum", "Copper"]},
+{c:"Science",q:"What brain part controls balance?",a:"Cerebellum",d:"hard",w:["Cerebrum", "Cerebellum", "Medulla", "Hippocampus"]},
+{c:"Science",q:"What is the Chandrasekhar limit?",a:"Max mass of a white dwarf (~1.4 solar masses)",d:"hard",w:["Max mass of a white dwarf", "Min mass of a black hole", "Speed of light in vacuum", "Max temperature of a star"]},
+{c:"History",q:"Which Roman emperor split the Empire in 285 AD?",a:"Diocletian",d:"hard",w:["Constantine", "Diocletian", "Nero", "Augustus"]},
+{c:"History",q:"What Norse explorer reached North America c.1000 AD?",a:"Leif Erikson",d:"hard",w:["Erik the Red", "Leif Erikson", "Bjorn Ironside", "Harald Hardrada"]},
+{c:"History",q:"What civilization invented cuneiform writing?",a:"Sumerians",d:"hard",w:["Egyptians", "Sumerians", "Phoenicians", "Babylonians"]},
+{c:"History",q:"What was the Code of Hammurabi?",a:"One of the oldest written legal codes",d:"hard",w:["An ancient map", "Oldest written legal codes", "A religious text", "A math treatise"]},
+{c:"History",q:"What 1957 treaty created the European Economic Community?",a:"Treaty of Rome",d:"hard",w:["Treaty of Paris", "Treaty of Rome", "Treaty of Maastricht", "Treaty of Lisbon"]},
+{c:"History",q:"Who was the longest-reigning British monarch before Elizabeth II?",a:"Queen Victoria",d:"hard",w:["George III", "Queen Victoria", "Henry VIII", "Edward VII"]},
+{c:"History",q:"What was the Reformation?",a:"16th-century movement for religious reform",d:"hard",w:["Scientific revolution", "16th-c religious reform movement", "Art movement", "French political revolution"]},
+{c:"Entertainment",q:"Which film won the first Best Picture Oscar?",a:"Wings (1927)",d:"hard",w:["Sunrise", "Wings", "The Jazz Singer", "Metropolis"]},
+{c:"Entertainment",q:"What is Frodos sword in Lord of the Rings?",a:"Sting",d:"hard",w:["Glamdring", "Sting", "Anduril", "Orcrist"]},
+{c:"Entertainment",q:"Who created The Twilight Zone?",a:"Rod Serling",d:"hard",w:["Alfred Hitchcock", "Rod Serling", "Steven Spielberg", "Jordan Peele"]},
+{c:"Entertainment",q:"What is the pub in Its Always Sunny in Philadelphia?",a:"Paddys Pub",d:"hard",w:["Paddys Pub", "MacLarens", "The Alibi Room", "Cheers"]},
+{c:"Entertainment",q:"What year was the first iPhone released?",a:"2007",d:"hard",w:["2005", "2006", "2007", "2008"]},
+{c:"Entertainment",q:"What does Andy crawl through in Shawshank Redemption?",a:"A sewage pipe",d:"hard",w:["A tunnel", "A sewage pipe", "An air vent", "A drainage ditch"]},
+{c:"Sports",q:"What is the maximum break in snooker?",a:"147",d:"hard",w:["140", "147", "150", "155"]},
+{c:"Sports",q:"What is a basketball hoops diameter in inches?",a:"18 inches",d:"hard",w:["16", "18", "20", "22"]},
+{c:"Sports",q:"What are the three fencing weapons?",a:"Foil, epee, and sabre",d:"hard",w:["Foil, epee, sabre", "Rapier, cutlass, dagger", "Foil, rapier, broadsword", "Epee, katana, sabre"]},
+{c:"Sports",q:"Who won the first FIFA Womens World Cup (1991)?",a:"United States",d:"hard",w:["Norway", "United States", "Germany", "Sweden"]},
+{c:"Sports",q:"Highest score with a single dart?",a:"60 (triple 20)",d:"hard",w:["50", "57", "60", "80"]},
+{c:"Sports",q:"What is the triple crown in baseball?",a:"Leading in batting avg, HRs, and RBIs",d:"hard",w:["Leading in batting avg, HRs, and RBIs", "Winning World Series 3x", "Pitching 3 perfect games", "3 home runs in one game"]},
+{c:"Sports",q:"What martial art debuted at the 2021 Tokyo Olympics?",a:"Karate",d:"hard",w:["Karate", "Judo", "Taekwondo", "Jiu-Jitsu"]},
+{c:"Sports",q:"How wide is an American football field in yards?",a:"53 1/3 yards",d:"hard",w:["50", "53 1/3", "55", "60"]},
+{c:"Art & Culture",q:"Who designed the Guggenheim Museum NYC?",a:"Frank Lloyd Wright",d:"hard",w:["Frank Lloyd Wright", "Le Corbusier", "Frank Gehry", "I.M. Pei"]},
+{c:"Art & Culture",q:"What is chiaroscuro?",a:"Strong contrasts between light and dark",d:"hard",w:["Bright color use", "Strong light/dark contrasts", "Painting with dots", "Geometric abstraction"]},
+{c:"Art & Culture",q:"Who composed the opera Carmen?",a:"Georges Bizet",d:"hard",w:["Verdi", "Bizet", "Puccini", "Wagner"]},
+{c:"Art & Culture",q:"What is Kintsugi?",a:"Japanese art of repairing pottery with gold",d:"hard",w:["Calligraphy", "Repairing pottery with gold", "Martial arts form", "Flower arrangement"]},
+{c:"Art & Culture",q:"Who painted The Birth of Venus?",a:"Sandro Botticelli",d:"hard",w:["Raphael", "Botticelli", "Titian", "Caravaggio"]},
+{c:"Art & Culture",q:"What is a triptych?",a:"A work of art in three panels",d:"hard",w:["A musical composition", "Art in three panels", "A three-act play", "A poetic form"]},
+{c:"Art & Culture",q:"Who is known for drip painting?",a:"Jackson Pollock",d:"hard",w:["Mark Rothko", "Jackson Pollock", "de Kooning", "Andy Warhol"]},
+{c:"Food & Drink",q:"What French term means diced onions, carrots, celery?",a:"Mirepoix",d:"hard",w:["Brunoise", "Mirepoix", "Julienne", "Concasse"]},
+{c:"Food & Drink",q:"What is the Maillard reaction?",a:"Chemical reaction that browns food",d:"hard",w:["Fermentation", "Reaction that browns food", "Sugar caramelization", "Fat oxidation"]},
+{c:"Food & Drink",q:"What milk makes mozzarella di bufala?",a:"Water buffalo milk",d:"hard",w:["Cow milk", "Water buffalo milk", "Goat milk", "Sheep milk"]},
+{c:"Food & Drink",q:"What grapes make Champagne?",a:"Chardonnay, Pinot Noir, Pinot Meunier",d:"hard",w:["Chardonnay, Pinot Noir, Pinot Meunier", "Sauvignon Blanc, Merlot, Cabernet", "Riesling, Gewurztraminer, Pinot Gris", "Syrah, Grenache, Mourvedre"]},
+{c:"Food & Drink",q:"What is the traditional Ethiopian flatbread?",a:"Injera",d:"hard",w:["Naan", "Injera", "Pita", "Chapati"]},
+{c:"Food & Drink",q:"What region produces Parmigiano-Reggiano?",a:"Emilia-Romagna",d:"hard",w:["Tuscany", "Emilia-Romagna", "Lombardy", "Veneto"]},
+{c:"Technology",q:"What does CAPTCHA stand for?",a:"Completely Automated Public Turing test to tell Computers and Humans Apart",d:"hard",w:["Completely Automated Public Turing test...", "Computer Aided Protocol...", "Centralized Anti-Phishing...", "Coded Authentication Protocol..."]},
+{c:"Technology",q:"What was the first successful web browser?",a:"Netscape Navigator",d:"hard",w:["Internet Explorer", "Netscape Navigator", "Mosaic", "Opera"]},
+{c:"Technology",q:"What IBM computer beat Kasparov at chess?",a:"Deep Blue (1997)",d:"hard",w:["Watson", "Deep Blue", "AlphaGo", "HAL 9000"]},
+{c:"Technology",q:"What is Moores Law?",a:"Transistor count doubles every ~2 years",d:"hard",w:["Transistors double every 2 years", "Speed doubles yearly", "Storage halves per decade", "Internet speed doubles every 6 months"]},
+{c:"Technology",q:"What year was the first email sent?",a:"1971",d:"hard",w:["1965", "1969", "1971", "1975"]},
+{c:"Technology",q:"What does Wi-Fi actually stand for?",a:"Nothing officially",d:"hard",w:["Wireless Fidelity", "Nothing officially", "Wide-band Frequency", "Wired-Free Internet"]},
+{c:"Nature",q:"What is the most venomous snake?",a:"Inland taipan",d:"hard",w:["King cobra", "Black mamba", "Inland taipan", "Eastern brown snake"]},
+{c:"Nature",q:"What animal has the longest migration?",a:"Arctic tern",d:"hard",w:["Monarch butterfly", "Arctic tern", "Gray whale", "Wildebeest"]},
+{c:"Nature",q:"What is the worlds largest flower?",a:"Rafflesia arnoldii",d:"hard",w:["Titan arum", "Rafflesia arnoldii", "Sunflower", "Victoria water lily"]},
+{c:"Nature",q:"What is the largest bird by wingspan?",a:"Wandering albatross",d:"hard",w:["Andean condor", "Wandering albatross", "Bald eagle", "Pelican"]},
+{c:"Nature",q:"What term describes animals active at dawn and dusk?",a:"Crepuscular",d:"hard",w:["Nocturnal", "Crepuscular", "Diurnal", "Cathemeral"]},
+{c:"Nature",q:"What is the worlds smallest mammal?",a:"Bumblebee bat",d:"hard",w:["Pygmy shrew", "Bumblebee bat", "Etruscan shrew", "Pygmy mouse lemur"]},
+{c:"Literature",q:"What is Captain Ahabs ship in Moby-Dick?",a:"The Pequod",d:"hard",w:["The Endeavour", "The Pequod", "The Bounty", "The Beagle"]},
+{c:"Literature",q:"What Philip K. Dick novel inspired Blade Runner?",a:"Do Androids Dream of Electric Sheep?",d:"hard",w:["Do Androids Dream of Electric Sheep?", "The Man in the High Castle", "A Scanner Darkly", "Ubik"]},
+{c:"Literature",q:"In what century was The Canterbury Tales written?",a:"14th century",d:"hard",w:["12th", "13th", "14th", "15th"]},
+{c:"Literature",q:"What is Hamlets mothers name?",a:"Gertrude",d:"hard",w:["Ophelia", "Gertrude", "Cordelia", "Desdemona"]},
+{c:"Literature",q:"Who wrote Invisible Man (1952)?",a:"Ralph Ellison",d:"hard",w:["James Baldwin", "Ralph Ellison", "Richard Wright", "Langston Hughes"]},
+{c:"Literature",q:"Which Bronte sister wrote Wuthering Heights?",a:"Emily Bronte",d:"hard",w:["Charlotte Bronte", "Emily Bronte", "Anne Bronte", "Mary Shelley"]},
+{c:"Geography",q:"What is the largest country by area?",a:"Russia",d:"easy",w:["Canada", "Russia", "China", "USA"]},
+{c:"Science",q:"What gas do plants absorb in photosynthesis?",a:"Carbon dioxide",d:"easy",w:["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"]},
+{c:"History",q:"Who was the first US President?",a:"George Washington",d:"easy",w:["Jefferson", "Washington", "Lincoln", "Adams"]},
+{c:"Entertainment",q:"What is the longest-running US animated TV series?",a:"The Simpsons",d:"easy",w:["Family Guy", "The Simpsons", "South Park", "SpongeBob"]},
+{c:"Sports",q:"In basketball, how many points is a three-pointer?",a:"3",d:"easy",w:["2", "3", "4", "5"]},
+{c:"Nature",q:"What process do plants use to make oxygen?",a:"Photosynthesis",d:"easy",w:["Respiration", "Photosynthesis", "Fermentation", "Osmosis"]},
+{c:"Food & Drink",q:"What is tofu made from?",a:"Soybeans",d:"easy",w:["Rice", "Soybeans", "Wheat", "Corn"]},
+{c:"Technology",q:"What does AI stand for?",a:"Artificial Intelligence",d:"easy",w:["Artificial Intelligence", "Automated Interface", "Advanced Integration", "Applied Informatics"]},
+{c:"Literature",q:"Who wrote Pride and Prejudice?",a:"Jane Austen",d:"easy",w:["Charlotte Bronte", "Jane Austen", "Mary Shelley", "Virginia Woolf"]},
+{c:"Art & Culture",q:"What is beautiful handwriting called?",a:"Calligraphy",d:"easy",w:["Typography", "Calligraphy", "Stenography", "Lithography"]},
+{c:"Geography",q:"What is the driest inhabited continent?",a:"Australia",d:"medium",w:["Africa", "Australia", "South America", "Europe"]},
+{c:"Science",q:"What is cell division producing identical copies?",a:"Mitosis",d:"medium",w:["Meiosis", "Mitosis", "Osmosis", "Diffusion"]},
+{c:"History",q:"Who led the Free French Forces in WWII?",a:"Charles de Gaulle",d:"medium",w:["De Gaulle", "Petain", "Leclerc", "Moulin"]},
+{c:"Entertainment",q:"Whose real name is Stefani Germanotta?",a:"Lady Gaga",d:"medium",w:["Rihanna", "Lady Gaga", "Katy Perry", "Beyonce"]},
+{c:"Sports",q:"What country has won the most FIFA World Cups?",a:"Brazil (5)",d:"medium",w:["Germany", "Brazil", "Italy", "Argentina"]},
+{c:"Nature",q:"How many stomach compartments does a cow have?",a:"4",d:"medium",w:["1", "2", "3", "4"]},
+{c:"Food & Drink",q:"What is Wagyu?",a:"Japanese cattle known for marbled beef",d:"medium",w:["A sushi type", "Japanese marbled beef cattle", "A rice wine", "A noodle dish"]},
+{c:"Technology",q:"What does IoT stand for?",a:"Internet of Things",d:"medium",w:["Internet of Things", "Integration of Tech", "Interface of Tools", "Instant Online Transfer"]},
+{c:"Literature",q:"Who wrote Brave New World?",a:"Aldous Huxley",d:"medium",w:["George Orwell", "Aldous Huxley", "Ray Bradbury", "Philip K. Dick"]},
+{c:"Art & Culture",q:"What century did the Renaissance begin?",a:"14th century",d:"medium",w:["12th", "13th", "14th", "15th"]},
+{c:"Geography",q:"What is the saltiest body of water on Earth?",a:"Don Juan Pond (Antarctica)",d:"hard",w:["Dead Sea", "Don Juan Pond", "Great Salt Lake", "Lake Assal"]},
+{c:"Science",q:"What is the half-life of Carbon-14?",a:"About 5730 years",d:"hard",w:["1200 years", "5730 years", "12000 years", "50000 years"]},
+{c:"History",q:"What was the Hundred Years War between?",a:"England and France",d:"hard",w:["England and Spain", "England and France", "France and Germany", "England and Scotland"]},
+{c:"Entertainment",q:"What game franchise features Master Chief?",a:"Halo",d:"hard",w:["Halo", "Gears of War", "Destiny", "Mass Effect"]},
+{c:"Sports",q:"Which country has the most Rugby World Cups?",a:"South Africa (4)",d:"hard",w:["New Zealand", "South Africa", "Australia", "England"]},
+{c:"Nature",q:"What ocean animal has the largest brain?",a:"Sperm whale",d:"hard",w:["Blue whale", "Sperm whale", "Dolphin", "Orca"]},
+{c:"Food & Drink",q:"What is removing sediment from Champagne called?",a:"Disgorgement",d:"hard",w:["Decanting", "Disgorgement", "Racking", "Fining"]},
+{c:"Technology",q:"What is quantum computing based on?",a:"Quantum phenomena (superposition, entanglement)",d:"hard",w:["Binary transistors", "Quantum phenomena", "Optical signals", "Neural networks"]},
+{c:"Literature",q:"Who wrote Catch-22?",a:"Joseph Heller",d:"hard",w:["Kurt Vonnegut", "Joseph Heller", "Norman Mailer", "Philip Roth"]},
+{c:"Art & Culture",q:"What is Bauhaus?",a:"German art school/movement (1919-1933)",d:"hard",w:["A musical genre", "German art school 1919-1933", "French cooking style", "Japanese garden design"]},
+{c:"Food & Drink",q:"What is the base of bearnaise sauce?",a:"Egg yolks and butter with tarragon",d:"hard",w:["Cream and mustard", "Egg yolks and butter with tarragon", "Tomato and basil", "Roux and stock"]},
+{c:"Nature",q:"What tree can live over 5000 years?",a:"Bristlecone pine",d:"hard",w:["Sequoia", "Bristlecone pine", "Oak", "Baobab"]}
+];
+
+const CAT_META = {
+  "Geography":{icon:"\u{1F30D}",hue:210,color:"#3b82f6"},
+  "Science":{icon:"\u{1F52C}",hue:160,color:"#10b981"},
+  "History":{icon:"\u{1F4DC}",hue:35,color:"#f59e0b"},
+  "Entertainment":{icon:"\u{1F3AC}",hue:270,color:"#8b5cf6"},
+  "Sports":{icon:"\u26BD",hue:0,color:"#ef4444"},
+  "Art & Culture":{icon:"\u{1F3A8}",hue:330,color:"#ec4899"},
+  "Food & Drink":{icon:"\u{1F377}",hue:25,color:"#f97316"},
+  "Technology":{icon:"\u{1F4BB}",hue:190,color:"#06b6d4"},
+  "Nature":{icon:"\u{1F33F}",hue:130,color:"#22c55e"},
+  "Literature":{icon:"\u{1F4DA}",hue:260,color:"#a855f7"},
+};
+const CATS=Object.keys(CAT_META);
+const TC=["#3b82f6","#f59e0b"];
+const TG=["rgba(59,130,246,0.25)","rgba(245,158,11,0.25)"];
+const TIMER_SEC=45;
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+function Confetti({active}){
+  const ref=useRef(null),anim=useRef(null);
+  useEffect(()=>{
+    if(!active||!ref.current)return;
+    const cv=ref.current,ctx=cv.getContext("2d");cv.width=window.innerWidth;cv.height=window.innerHeight;
+    const cols=["#3b82f6","#f59e0b","#10b981","#ef4444","#8b5cf6","#ec4899","#fff"];
+    const pts=Array.from({length:80},()=>({x:Math.random()*cv.width,y:Math.random()*-cv.height,w:4+Math.random()*8,h:2+Math.random()*5,c:cols[~~(Math.random()*cols.length)],vy:1.5+Math.random()*3,vx:(Math.random()-0.5)*2,r:Math.random()*360,vr:(Math.random()-0.5)*10}));
+    const draw=()=>{ctx.clearRect(0,0,cv.width,cv.height);for(const p of pts){p.y+=p.vy;p.x+=p.vx;p.r+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r*Math.PI/180);ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();if(p.y>cv.height+30){p.y=-20;p.x=Math.random()*cv.width;}}anim.current=requestAnimationFrame(draw);};
+    draw();return()=>cancelAnimationFrame(anim.current);
+  },[active]);
+  if(!active)return null;
+  return <canvas ref={ref} style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:999}}/>;
+}
+
+function TimerRing({seconds,max}){
+  const pct=seconds/max,r=24,circ=2*Math.PI*r;
+  const color=seconds<=5?"#ef4444":seconds<=10?"#f59e0b":"#22c55e";
+  return(<div style={{position:"relative",width:60,height:60,display:"flex",alignItems:"center",justifyContent:"center"}}>
+    <svg width={60} height={60} style={{position:"absolute",transform:"rotate(-90deg)"}}><circle cx={30} cy={30} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={4}/><circle cx={30} cy={30} r={r} fill="none" stroke={color} strokeWidth={4} strokeDasharray={circ} strokeDashoffset={circ*(1-pct)} strokeLinecap="round" style={{transition:"stroke-dashoffset 0.95s linear,stroke 0.3s"}}/></svg>
+    <span style={{fontSize:18,fontWeight:800,color,zIndex:1,fontVariantNumeric:"tabular-nums"}}>{seconds}</span>
+  </div>);
+}
+
+/* ═══ BOARD LAYOUT ═══ 
+   30 outer ring cells (indices 0-29), 6 HQ cells (30-35), 1 hub (36)
+   Each spoke: 5 ring cells + 1 HQ. Ring cells at indices 0,5,10,15,20,25 are "spoke junctions"
+   that connect to HQ cells 30-35. Categories cycle around the ring.
+*/
+const BOARD_CATS=["Geography","Science","History","Entertainment","Sports","Art & Culture"];
+const BOARD_CELLS=[];
+// Outer ring: 30 cells
+for(let i=0;i<30;i++) BOARD_CELLS.push({id:i,type:"ring",cat:BOARD_CATS[i%6]});
+// HQ cells: 6 (one per category spoke)
+for(let i=0;i<6;i++) BOARD_CELLS.push({id:30+i,type:"hq",cat:BOARD_CATS[i]});
+// Hub center
+BOARD_CELLS.push({id:36,type:"hub",cat:null});
+
+// Adjacency: ring is circular, spoke junctions connect to HQ, HQ connects to hub
+function getRingNeighbors(id){return[(id+1)%30,(id-1+30)%30];}
+function getReachable(pos,steps){
+  // BFS to find all cells exactly `steps` away
+  let frontier=new Set([pos]),visited=new Set([pos]);
+  for(let s=0;s<steps;s++){
+    const next=new Set();
+    for(const p of frontier){
+      let neighbors=[];
+      if(p<30){
+        neighbors=getRingNeighbors(p);
+        // Spoke junction? Can go to HQ
+        const spokeIdx=p%5===0?p/5:-1;
+        if(spokeIdx>=0&&spokeIdx<6)neighbors.push(30+spokeIdx);
+      } else if(p>=30&&p<36){
+        // HQ: can go back to ring junction or to hub
+        const spokeIdx=p-30;
+        neighbors=[spokeIdx*5,36];
+      } else if(p===36){
+        // Hub: can go to any HQ
+        neighbors=[30,31,32,33,34,35];
+      }
+      for(const n of neighbors){if(!visited.has(n)){next.add(n);visited.add(n);}}
+    }
+    frontier=next;
+  }
+  return[...frontier];
+}
+
+// Board cell positions for SVG rendering
+function getCellPos(id){
+  const cx=160,cy=160,ringR=120,hqR=60;
+  if(id<30){
+    const angle=(id*12-90)*Math.PI/180;
+    return{x:cx+ringR*Math.cos(angle),y:cy+ringR*Math.sin(angle)};
+  } else if(id<36){
+    const spoke=id-30,angle=(spoke*60-90)*Math.PI/180;
+    return{x:cx+hqR*Math.cos(angle),y:cy+hqR*Math.sin(angle)};
+  }
+  return{x:cx,y:cy};
+}
+
+function GameBoard({pos,wedges,reachable,onCellClick,team}){
+  const sz=320;
+  return(<svg width="100%" viewBox="0 0 320 320" style={{maxWidth:sz}}>
+    {/* Spoke lines from junctions to HQ */}
+    {[0,1,2,3,4,5].map(i=>{
+      const junc=getCellPos(i*5),hq=getCellPos(30+i);
+      return <line key={`spoke${i}`} x1={junc.x} y1={junc.y} x2={hq.x} y2={hq.y} stroke="rgba(255,255,255,0.06)" strokeWidth={1.5}/>;
+    })}
+    {/* Lines from HQ to hub */}
+    {[0,1,2,3,4,5].map(i=>{
+      const hq=getCellPos(30+i),hub=getCellPos(36);
+      return <line key={`hub${i}`} x1={hq.x} y1={hq.y} x2={hub.x} y2={hub.y} stroke="rgba(255,255,255,0.04)" strokeWidth={1} strokeDasharray="3,3"/>;
+    })}
+    {/* Ring arcs (connect adjacent ring cells) */}
+    {Array.from({length:30}).map((_,i)=>{
+      const a=getCellPos(i),b=getCellPos((i+1)%30);
+      return <line key={`arc${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="rgba(255,255,255,0.05)" strokeWidth={1}/>;
+    })}
+    {/* Cells */}
+    {BOARD_CELLS.map(cell=>{
+      const p=getCellPos(cell.id);
+      const isReachable=reachable.includes(cell.id);
+      const isPos=pos===cell.id;
+      const cat=cell.cat;const cm=cat?CAT_META[cat]:null;
+      const hasWedge=cat&&wedges.includes(cat);
+      const isHub=cell.type==="hub";const isHq=cell.type==="hq";
+      const r=isHub?16:isHq?13:isPos?10:isReachable?9:7;
+      const fill=isPos?TC[team]:isReachable?(cm?cm.color+"cc":"rgba(255,255,255,0.3)"):isHub?(wedges.length>=6?"#f59e0b":"rgba(255,255,255,0.04)"):isHq?(hasWedge?cm.color+"44":"rgba(255,255,255,0.06)"):(cm?cm.color+"18":"rgba(255,255,255,0.04)");
+      const stroke=isReachable?"#fff":isPos?"#fff":isHq?(hasWedge?cm.color+"88":"rgba(255,255,255,0.1)"):"rgba(255,255,255,0.06)";
+      const sw=isReachable?2.5:isPos?2:1;
+      return <g key={cell.id} onClick={()=>isReachable&&onCellClick(cell)} style={{cursor:isReachable?"pointer":"default"}}>
+        <circle cx={p.x} cy={p.y} r={r} fill={fill} stroke={stroke} strokeWidth={sw} style={{transition:"all 0.3s"}}/>
+        {isReachable&&<circle cx={p.x} cy={p.y} r={r+3} fill="none" stroke="#fff" strokeWidth={0.5} opacity={0.4} style={{animation:"pulse 1.5s ease infinite"}}/>}
+        {(isHq||isHub)&&<text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize={isHub?11:10} fill="#fff">{isHub?"⭐":(cm?cm.icon:"")}</text>}
+        {isPos&&<text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize={7} fill="#fff">●</text>}
+      </g>;
+    })}
+    {/* Legend */}
+    <text x={160} y={308} textAnchor="middle" fontSize={8} fill="rgba(255,255,255,0.2)">Click a glowing cell to move</text>
+  </svg>);
+}
+
+function MiniBoard({wedges,cur}){
+  return(<svg width={110} height={110} viewBox="0 0 110 110">
+    {CATS.slice(0,6).map((cat,i)=>{const a=(i*60-90)*Math.PI/180,x=55+34*Math.cos(a),y=55+34*Math.sin(a),has=wedges.includes(cat),act=cur===cat;
+    return <g key={cat}><circle cx={x} cy={y} r={act?15:11} fill={has?CAT_META[cat].color:"rgba(255,255,255,0.06)"} stroke={act?"#fff":"rgba(255,255,255,0.12)"} strokeWidth={act?2:1}/><text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={act?13:9}>{CAT_META[cat].icon}</text></g>;})}
+    <circle cx={55} cy={55} r={13} fill={wedges.length>=6?"#f59e0b":"rgba(255,255,255,0.04)"} stroke="rgba(255,255,255,0.15)" strokeWidth={1}/><text x={55} y={55} textAnchor="middle" dominantBaseline="central" fontSize={9} fill="#fff">{wedges.length}/6</text>
+  </svg>);
+}
+
+function applyFilter(questions,filterText,diffLevel){
+  let pool=[...questions];
+  if(diffLevel<=1)pool=pool.filter(q=>q.d==="easy");
+  else if(diffLevel===2)pool=pool.filter(q=>q.d==="easy"||q.d==="medium");
+  else if(diffLevel===3)pool=pool;
+  else if(diffLevel===4)pool=pool.filter(q=>q.d==="medium"||q.d==="hard");
+  else pool=pool.filter(q=>q.d==="hard");
+  if(!filterText||!filterText.trim())return pool;
+  const f=filterText.toLowerCase();
+  const excl=[{r:/no\s*(tv|television|pop\s*culture|entertainment)/i,c:["Entertainment"]},{r:/no\s*sports?/i,c:["Sports"]},{r:/no\s*science/i,c:["Science"]},{r:/no\s*history/i,c:["History"]},{r:/no\s*geograph/i,c:["Geography"]},{r:/no\s*(art|culture)/i,c:["Art & Culture"]},{r:/no\s*food/i,c:["Food & Drink"]},{r:/no\s*tech/i,c:["Technology"]},{r:/no\s*natur/i,c:["Nature"]},{r:/no\s*(liter|book)/i,c:["Literature"]}];
+  let ec=new Set();for(const p of excl){if(p.r.test(filterText))p.c.forEach(c=>ec.add(c));}
+  const om=filterText.match(/only\s+([\w\s,&]+)/i);
+  if(om){const ot=om[1].toLowerCase();const ic=CATS.filter(c=>ot.includes(c.toLowerCase().split(" ")[0]));if(ic.length>0)pool=pool.filter(q=>ic.includes(q.c));}
+  if(ec.size>0)pool=pool.filter(q=>!ec.has(q.c));
+  const na=filterText.match(/no\s+(?:questions?\s+(?:about|on|related\s+to)\s+)([\w\s,]+)/i);
+  if(na){const kw=na[1].toLowerCase().split(/[,\s]+/).filter(Boolean);pool=pool.filter(q=>!kw.some(k=>q.q.toLowerCase().includes(k)||q.a.toLowerCase().includes(k)));}
+  const fm=filterText.match(/(?:focus\s+on|about|related\s+to)\s+([\w\s,]+)/i);
+  if(fm&&!na){const kw=fm[1].toLowerCase().split(/[,\s]+/).filter(Boolean);const fo=pool.filter(q=>kw.some(k=>q.q.toLowerCase().includes(k)||q.a.toLowerCase().includes(k)||q.c.toLowerCase().includes(k)));if(fo.length>=10)pool=fo;}
+  return pool;
+}
+
+function App(){
+  const [phase,setPhase]=useState("home");
+  const [mode,setMode]=useState(null);
+  const [diff,setDiff]=useState(3);
+  const [filter,setFilter]=useState("");
+  const [nQ,setNQ]=useState(10);
+  const [pool,setPool]=useState([]);
+  const [team,setTeam]=useState(0);
+  const [scores,setScores]=useState([0,0]);
+  const [curQ,setCurQ]=useState(null);
+  const [revealed,setRevealed]=useState(false);
+  const [ca,setCa]=useState("");
+  const [flash,setFlash]=useState(null);
+  const [jokers,setJokers]=useState([true,true]);
+  const [mcMode,setMcMode]=useState(false);
+  const [timer,setTimer]=useState(TIMER_SEC);
+  const [timerOn,setTimerOn]=useState(false);
+  const [timeUp,setTimeUp]=useState(false);
+  const [asked,setAsked]=useState([0,0]);
+  const [wedges,setWedges]=useState([[],[]]);
+  const [isHQ,setIsHQ]=useState(false);
+  const [curCat,setCurCat]=useState(null);
+  const [diceVal,setDiceVal]=useState(null);
+  const [picking,setPicking]=useState(false);
+  const [hubPick,setHubPick]=useState(false);
+  const [hubQ,setHubQ]=useState(false);
+  const [streak,setStreak]=useState(0);
+  const [boardPos,setBoardPos]=useState([0,15]); // each team starts opposite
+  const [reachable,setReachable]=useState([]);
+  const [mult,setMult]=useState(1);
+  const [bonus,setBonus]=useState(false);
+  const [sdOn,setSdOn]=useState(false);
+  const [sdTurn,setSdTurn]=useState(0);
+  const [sdSc,setSdSc]=useState([0,0]);
+  const [sdR,setSdR]=useState(0);
+  const [usedIds,setUsedIds]=useState(new Set());
+  const poolRef=useRef([]);
+  const [answerInput,setAnswerInput]=useState("");
+  const [answerResult,setAnswerResult]=useState(null); // null|"correct"|"wrong"
+  const answerRef=useRef(null);
+  const [mcOptions,setMcOptions]=useState([]);
+  const [autoSpeak,setAutoSpeak]=useState(true);
+
+  const speak=(text)=>{
+    if(!window.speechSynthesis)return;
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="en-US";u.rate=0.95;u.pitch=1;
+    // Pick best English voice
+    const voices=window.speechSynthesis.getVoices();
+    const en=voices.filter(v=>v.lang.startsWith("en"));
+    if(en.length>0)u.voice=en[0];
+    window.speechSynthesis.speak(u);
+  };
+
+  // Fuzzy match: normalize + Levenshtein distance
+  const normalize=(s)=>s.toLowerCase().replace(/[^a-z0-9àáâãäåèéêëìíîïòóôõöùúûüýÿñç]/g,"");
+  const levenshtein=(a,b)=>{
+    const m=a.length,n=b.length,d=Array.from({length:m+1},(_,i)=>Array(n+1).fill(0));
+    for(let i=0;i<=m;i++)d[i][0]=i;for(let j=0;j<=n;j++)d[0][j]=j;
+    for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]!==b[j-1]?1:0));
+    return d[m][n];
+  };
+  const fuzzyMatch=(input,answer)=>{
+    const ni=normalize(input),na=normalize(answer);
+    if(!ni)return false;
+    if(na.includes(ni)||ni.includes(na))return true;
+    // Also check individual parts of the answer (e.g. "Canberra" in "Canberra, Australia")
+    const parts=answer.split(/[\s,()\/\-]+/).map(normalize).filter(p=>p.length>2);
+    for(const p of parts){if(p===ni)return true;if(levenshtein(ni,p)<=Math.max(1,Math.floor(p.length*0.25)))return true;}
+    // Full answer comparison with tolerance
+    const dist=levenshtein(ni,na);
+    const threshold=Math.max(2,Math.floor(na.length*0.25));
+    return dist<=threshold;
+  };
+
+  const tRef=useRef(null);
+  useEffect(()=>{if(!timerOn){clearInterval(tRef.current);return;}tRef.current=setInterval(()=>{setTimer(t=>{if(t<=1){clearInterval(tRef.current);setTimerOn(false);setTimeUp(true);return 0;}return t-1;});},1000);return()=>clearInterval(tRef.current);},[timerOn]);
+
+  const startT=()=>{setTimer(TIMER_SEC);setTimerOn(true);setTimeUp(false);};
+  const stopT=()=>setTimerOn(false);
+  const cl=(a,b)=>`clamp(${a}px,${a+(b-a)*0.5}px + 1vw,${b}px)`;
+
+  const pickQ=(cat)=>{
+    const p=poolRef.current;
+    if(!p||p.length===0)return;
+    const avail=p.filter(q=>(!cat||q.c===cat)&&!usedIds.has(q.q));
+    let q;
+    if(avail.length===0){setUsedIds(new Set());q=pick(p.filter(qq=>!cat||qq.c===cat));}
+    else q=pick(avail);
+    if(!q)q=pick(p);
+    if(!q)return;
+    setUsedIds(s=>{const n=new Set(s);n.add(q.q);return n;});
+    setCurQ(q);setRevealed(false);setMcMode(false);setTimeUp(false);setAnswerInput("");setAnswerResult(null);startT();setCa("in");setTimeout(()=>{setCa("");if(answerRef.current)answerRef.current.focus();if(autoSpeak)speak(q.q);},400);
+  };
+
+  const startGame=()=>{
+    const f=shuffle(applyFilter(QUESTIONS,filter,diff));
+    if(f.length<10){alert("Not enough questions with these filters.");return;}
+    poolRef.current=f;setPool(f);
+    setTeam(0);setScores([0,0]);setJokers([true,true]);
+    setAsked([0,0]);setWedges([[],[]]);setStreak(0);setMult(1);setBonus(false);setBoardPos([0,15]);setReachable([]);
+    setSdOn(false);setSdTurn(0);setSdSc([0,0]);setSdR(0);setUsedIds(new Set());
+    setPicking(false);setHubPick(false);setHubQ(false);setDiceVal(null);setCurQ(null);
+    setPhase("game");
+    setTimeout(()=>{
+      if(mode==="classic")classicStart();
+      else if(mode==="hybrid")hybridStart();
+      else pickQ(null);
+    },150);
+  };
+
+  // SIMPLE
+  const simpleAns=(ok)=>{stopT();
+    if(ok){setScores(s=>{const n=[...s];n[team]++;return n;});setFlash(team);setTimeout(()=>setFlash(null),500);}
+    const na=[...asked];na[team]++;setAsked(na);
+    setCa("out");setTimeout(()=>{
+      if(na[0]+na[1]>=nQ*2){const s0=scores[0]+(ok&&team===0?1:0),s1=scores[1]+(ok&&team===1?1:0);if(s0===s1){initSD();}else{setPhase("end");}}
+      else{setTeam(1-team);pickQ(null);}
+    },300);
+  };
+
+  // CLASSIC
+  const classicStart=()=>{setDiceVal(null);setPicking(false);setIsHQ(false);setHubQ(false);setHubPick(false);setReachable([]);setCurQ(null);
+    if(wedges[team]?.length>=6){
+      // If at hub (36), go to final challenge. Otherwise roll to reach hub.
+      if(boardPos[team]===36){setHubPick(true);return;}
+      // Otherwise, normal roll - hub will appear as reachable if possible
+    }
+    let n=0;const iv=setInterval(()=>{setDiceVal(Math.floor(Math.random()*6)+1);n++;
+      if(n>=8){clearInterval(iv);const v=Math.floor(Math.random()*6)+1;setDiceVal(v);
+        const cells=getReachable(boardPos[team],v);
+        // Filter: if team has all wedges, include hub; if not, exclude hub
+        const filtered=cells.filter(c=>c!==36||wedges[team]?.length>=6);
+        setReachable(filtered);setPicking(true);
+      }
+    },100);
+  };
+
+  const classicCellClick=(cell)=>{
+    setPicking(false);setReachable([]);
+    const np=[...boardPos];np[team]=cell.id;setBoardPos(np);
+    const hq=cell.type==="hq";
+    const hub=cell.type==="hub";
+    setIsHQ(hq);setCurCat(cell.cat);
+    if(hub){
+      // Arrived at hub with all wedges -> final challenge
+      setHubPick(true);
+    } else {
+      pickQ(cell.cat||pick(BOARD_CATS));
+    }
+  };
+
+  const classicPick=(cat)=>{setPicking(false);setCurCat(cat);pickQ(cat);};
+
+  const classicAns=(ok)=>{stopT();
+    if(ok){
+      if(isHQ&&!wedges[team].includes(curCat)){const nw=[...wedges];nw[team]=[...nw[team],curCat];setWedges(nw);}
+      setScores(s=>{const n=[...s];n[team]++;return n;});setFlash(team);setTimeout(()=>setFlash(null),600);
+      setStreak(s=>s+1);
+      setCa("out");setTimeout(()=>{
+        const uw=isHQ&&!wedges[team].includes(curCat)?[...wedges[team],curCat]:wedges[team];
+        if(uw.length>=6){setHubPick(true);}else classicStart();
+      },300);
+    } else {setStreak(0);setCa("out");setTimeout(()=>{setTeam(1-team);setTimeout(()=>classicStart(),100);},300);}
+  };
+
+  const hubStart=(cat)=>{setHubPick(false);setHubQ(true);setCurCat(cat);pickQ(cat);};
+  const hubAns=(ok)=>{stopT();if(ok){setScores(s=>{const n=[...s];n[team]+=5;return n;});setPhase("end");}
+    else{setHubQ(false);setCa("out");setTimeout(()=>{setTeam(1-team);setTimeout(()=>classicStart(),100);},300);}};
+
+  // HYBRID
+  const hybridStart=()=>{setCurCat(null);setBonus(false);
+    const tot=asked[0]+asked[1];setBonus(tot>0&&tot%5===0);
+    const cat=pick(CATS);setCurCat(cat);pickQ(cat);
+  };
+
+  const hybridAns=(ok)=>{stopT();const na=[...asked];na[team]++;setAsked(na);
+    if(ok){const pts=bonus?3:mult;setScores(s=>{const n=[...s];n[team]+=pts;return n;});setFlash(team);setTimeout(()=>setFlash(null),500);
+      const ns=streak+1;setStreak(ns);if(ns>=3&&mult<3){setMult(m=>Math.min(m+1,3));setStreak(0);}
+    } else {if(bonus)setScores(s=>{const n=[...s];n[team]=Math.max(0,n[team]-2);return n;});setMult(1);setStreak(0);}
+    setCa("out");setTimeout(()=>{
+      if(na[0]+na[1]>=nQ*2){setPhase("end");}
+      else{setTeam(1-team);hybridStart();}
+    },300);
+  };
+
+  // SUDDEN DEATH
+  const initSD=()=>{setSdOn(true);setSdTurn(0);setSdSc([0,0]);setSdR(1);setTeam(0);pickQ(null);};
+  const sdAns=(ok)=>{stopT();const ns=[...sdSc];if(ok)ns[sdTurn]++;setSdSc(ns);
+    setCa("out");setTimeout(()=>{
+      if(sdTurn===0){setSdTurn(1);setTeam(1);pickQ(null);}
+      else{if(ns[0]!==ns[1]){setScores(s=>[s[0]+ns[0],s[1]+ns[1]]);setPhase("end");}
+        else{setSdR(r=>r+1);setSdSc([0,0]);setSdTurn(0);setTeam(0);pickQ(null);}}
+    },300);
+  };
+
+  const reveal=()=>{setRevealed(true);stopT();if(window.speechSynthesis)window.speechSynthesis.cancel();};
+  const submitAnswer=()=>{
+    if(!answerInput.trim())return;
+    stopT();if(window.speechSynthesis)window.speechSynthesis.cancel();
+    const isCorrect=fuzzyMatch(answerInput,curQ.a);
+    setAnswerResult(isCorrect?"correct":"wrong");
+    setRevealed(true);
+  };
+  const useJoker=()=>{if(!jokers[team]||!curQ)return;const n=[...jokers];n[team]=false;setJokers(n);setMcMode(true);setAnswerInput("");setAnswerResult(null);setMcOptions(shuffle(curQ.w));};
+  const goHome=()=>{setPhase("home");stopT();if(window.speechSynthesis)window.speechSynthesis.cancel();};
+  const extendGame=(x)=>{setNQ(n=>n+x);setPhase("game");if(mode==="simple")pickQ(null);else hybridStart();};
+
+  const handleAns=sdOn?sdAns:mode==="simple"?simpleAns:mode==="classic"?(hubQ?hubAns:classicAns):hybridAns;
+
+  const S={
+    root:{minHeight:"100vh",background:"radial-gradient(ellipse at 20% 0%,#1a1040,#0b0b1a 50%,#0a0e1a)",fontFamily:"'Outfit',sans-serif",color:"#fff",display:"flex",flexDirection:"column",alignItems:"center",padding:"20px 16px"},
+    glass:{background:"rgba(255,255,255,0.04)",backdropFilter:"blur(16px)",borderRadius:24,padding:"28px 24px",border:"1px solid rgba(255,255,255,0.07)"},
+  };
+
+  return(<>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap');
+      *{box-sizing:border-box;margin:0;padding:0}body{background:#0b0b1a}
+      @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes fadeOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-16px)}}
+      @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+      @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+      @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+      @keyframes gp{0%,100%{box-shadow:0 0 8px rgba(239,68,68,0.3)}50%{box-shadow:0 0 24px rgba(239,68,68,0.6)}}
+      .ci{animation:fadeUp .35s ease both}.co{animation:fadeOut .25s ease both}.sf{animation:pulse .4s ease}
+      .fl{animation:float 3s ease-in-out infinite}.shake{animation:shake .4s ease}.gd{animation:gp 1s ease infinite}
+      .bt{cursor:pointer;border:none;outline:none;font-family:'Outfit',sans-serif;transition:transform .15s}.bt:active{transform:scale(.97)}
+      .mc{cursor:pointer;border:1px solid rgba(255,255,255,0.1);outline:none;font-family:'Outfit',sans-serif;background:rgba(255,255,255,0.04);border-radius:12px;padding:13px 16px;color:#fff;font-size:13px;font-weight:600;text-align:left;transition:all .2s;width:100%}.mc:hover{background:rgba(255,255,255,0.08)}
+      .cb{cursor:pointer;border:1px solid rgba(255,255,255,0.08);outline:none;font-family:'Outfit',sans-serif;background:rgba(255,255,255,0.03);border-radius:14px;padding:12px 8px;color:#fff;font-size:12px;font-weight:600;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}.cb:hover{background:rgba(255,255,255,0.08);transform:scale(1.03)}
+      input,textarea{font-family:'Outfit',sans-serif}
+    `}</style>
+    <div style={S.root}>
+
+    {/* ══ HOME ══ */}
+    {phase==="home"&&(<div className="ci" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flex:1,textAlign:"center",maxWidth:520,width:"100%"}}>
+      <div className="fl" style={{fontSize:52,marginBottom:6}}>🎲</div>
+      <h1 style={{fontSize:cl(34,46),fontWeight:900,letterSpacing:6,lineHeight:1}}>CHAMPÉRY</h1>
+      <h2 style={{fontSize:cl(18,24),fontWeight:300,color:"rgba(255,255,255,0.5)",letterSpacing:12,marginBottom:4}}>PURSUIT</h2>
+      <div style={{width:50,height:2,background:"linear-gradient(90deg,#3b82f6,#f59e0b)",borderRadius:2,margin:"8px auto 4px"}}/>
+      <p style={{fontSize:10,color:"rgba(255,255,255,0.25)",letterSpacing:3,textTransform:"uppercase",marginBottom:22}}>Édition Trentenaires · 250 Questions</p>
+
+      {/* Mode */}
+      <p style={{fontSize:11,color:"rgba(255,255,255,0.35)",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Game Mode</p>
+      <div style={{display:"flex",gap:7,flexWrap:"wrap",justifyContent:"center",marginBottom:18,width:"100%"}}>
+        {[{id:"simple",l:"🎯 Simple",d:"Alternating turns, high score wins"},{id:"classic",l:"🏆 Classic",d:"Wedges, HQ rolls, keep playing while correct"},{id:"hybrid",l:"⚡ Hybrid",d:"Streaks + multipliers + bonus rounds"}].map(m=>(
+          <button key={m.id} className="bt" onClick={()=>setMode(m.id)} style={{flex:"1 1 140px",background:mode===m.id?"rgba(59,130,246,0.15)":"rgba(255,255,255,0.03)",border:mode===m.id?"1px solid rgba(59,130,246,0.4)":"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"12px 10px",textAlign:"center"}}>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:3}}>{m.l}</div>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",lineHeight:1.3}}>{m.d}</div>
+          </button>))}
+      </div>
+
+      {/* Difficulty 1-5 */}
+      <div style={{width:"100%",marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <p style={{fontSize:11,color:"rgba(255,255,255,0.35)",letterSpacing:2,textTransform:"uppercase"}}>Difficulty: {diff}/5</p>
+          <p style={{fontSize:10,color:"rgba(255,255,255,0.2)"}}>{["","Casual","Easy","Balanced","Challenging","Expert"][diff]}</p>
+        </div>
+        <div style={{display:"flex",gap:5,justifyContent:"center"}}>
+          {[1,2,3,4,5].map(n=>(<button key={n} className="bt" onClick={()=>setDiff(n)} style={{width:42,height:42,borderRadius:11,fontSize:15,fontWeight:800,background:n<=diff?`hsl(${120-n*24},70%,${55-n*5}%)`:"rgba(255,255,255,0.04)",color:n<=diff?"#fff":"rgba(255,255,255,0.2)",border:n===diff?"2px solid #fff":"1px solid rgba(255,255,255,0.06)"}}>{n}</button>))}
+        </div>
+      </div>
+
+      {/* Questions count */}
+      {mode!=="classic"&&(<div style={{width:"100%",marginBottom:16}}>
+        <p style={{fontSize:11,color:"rgba(255,255,255,0.35)",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Questions per team</p>
+        <div style={{display:"flex",gap:5,justifyContent:"center"}}>
+          {[5,10,15,20].map(n=>(<button key={n} className="bt" onClick={()=>setNQ(n)} style={{padding:"7px 16px",borderRadius:10,fontSize:13,fontWeight:700,background:nQ===n?"rgba(59,130,246,0.2)":"rgba(255,255,255,0.04)",border:nQ===n?"1px solid rgba(59,130,246,0.4)":"1px solid rgba(255,255,255,0.06)",color:nQ===n?"#3b82f6":"rgba(255,255,255,0.3)"}}>{n}</button>))}
+        </div>
+      </div>)}
+
+      {/* Filter */}
+      <div style={{width:"100%",marginBottom:22}}>
+        <p style={{fontSize:11,color:"rgba(255,255,255,0.35)",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>🎛 Question Filter <span style={{color:"rgba(255,255,255,0.15)"}}>(optional)</span></p>
+        <textarea value={filter} onChange={e=>setFilter(e.target.value)} placeholder={'e.g. "No sports, no entertainment"\n"Only science and history"\n"No questions about religion"'} style={{width:"100%",minHeight:56,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"10px 13px",color:"#fff",fontSize:12,resize:"vertical",outline:"none",lineHeight:1.4}}/>
+        <p style={{fontSize:9,color:"rgba(255,255,255,0.15)",marginTop:3}}>Exclude categories, focus on topics, skip keywords</p>
+      </div>
+
+      {/* Auto-speak toggle */}
+      <div style={{width:"100%",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"10px 14px"}}>
+        <div><span style={{fontSize:13}}>🔊</span><span style={{fontSize:12,color:"rgba(255,255,255,0.5)",fontWeight:600,marginLeft:8}}>Read questions aloud</span></div>
+        <button className="bt" onClick={()=>setAutoSpeak(s=>!s)} style={{width:44,height:24,borderRadius:12,background:autoSpeak?"#3b82f6":"rgba(255,255,255,0.1)",padding:2,display:"flex",alignItems:"center"}}>
+          <div style={{width:20,height:20,borderRadius:10,background:"#fff",transform:autoSpeak?"translateX(20px)":"translateX(0)",transition:"transform 0.2s"}}/>
+        </button>
+      </div>
+
+      <button className="bt" onClick={startGame} disabled={!mode} style={{background:mode?"linear-gradient(135deg,#3b82f6,#7c3aed)":"rgba(255,255,255,0.05)",borderRadius:16,padding:"15px 44px",boxShadow:mode?"0 8px 32px rgba(59,130,246,0.3)":"none",display:"flex",alignItems:"center",gap:10,opacity:mode?1:0.4}}>
+        <span style={{color:"#fff",fontSize:14,fontWeight:700,letterSpacing:3}}>START GAME</span><span style={{fontSize:16}}>→</span>
+      </button>
+    </div>)}
+
+    {/* ══ GAME ══ */}
+    {phase==="game"&&(<>
+      {/* Scoreboard */}
+      <div style={{width:"100%",maxWidth:520,marginBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",position:"relative"}}>
+          {[0,1].map(i=>(<div key={i} className={flash===i?"sf":""} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:1,opacity:team===i?1:0.3,transition:"opacity .3s"}}>
+            <span style={{color:"rgba(255,255,255,0.5)",fontSize:11,fontWeight:600}}>{i===0?"🔵 Éq.1":"🟠 Éq.2"}</span>
+            <span style={{fontSize:30,fontWeight:900,color:TC[i]}}>{scores[i]}</span>
+            <div style={{display:"flex",gap:3,alignItems:"center"}}>
+              {jokers[i]&&<span style={{fontSize:8,color:"rgba(255,255,255,0.25)"}}>🃏</span>}
+              {mode==="classic"&&<span style={{fontSize:8,color:"rgba(255,255,255,0.2)"}}>{wedges[i]?.length||0}/6</span>}
+              {mode==="hybrid"&&team===i&&mult>1&&<span style={{fontSize:9,color:"#f59e0b"}}>{mult}x</span>}
+            </div>
+          </div>))}
+          <div style={{position:"absolute",left:"50%",transform:"translateX(-50%)",textAlign:"center"}}>
+            {sdOn?<div style={{color:"#ef4444",fontSize:12,fontWeight:800,letterSpacing:2}}>⚡ SD R{sdR}</div>
+            :mode!=="classic"?<div style={{color:"rgba(255,255,255,0.35)",fontSize:11,fontWeight:600}}>{asked[0]+asked[1]}/{nQ*2}</div>
+            :diceVal&&!picking&&!curQ?<div style={{fontSize:24}}>🎲 {diceVal}</div>:null}
+          </div>
+        </div>
+        {mode!=="classic"&&!sdOn&&(<div style={{display:"flex",gap:3,marginTop:6}}>{[0,1].map(i=>(<div key={i} style={{flex:1,height:3,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${(asked[i]/nQ)*100}%`,background:TC[i],borderRadius:3,transition:"width .4s"}}/></div>))}</div>)}
+        {mode==="classic"&&(<div style={{width:"100%",maxWidth:520,marginTop:4}}>
+          <GameBoard pos={boardPos[team]} wedges={wedges[team]||[]} reachable={picking?reachable:[]} onCellClick={classicCellClick} team={team}/>
+        </div>)}
+      </div>
+
+      {/* Team + timer */}
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+        <div style={{background:TC[team],color:"#fff",fontWeight:700,fontSize:12,padding:"6px 20px",borderRadius:40,boxShadow:`0 0 18px ${TG[team]}`,letterSpacing:.5}}>
+          {team===0?"🔵 Équipe 1":"🟠 Équipe 2"}
+          {mode==="classic"&&streak>0&&!sdOn&&<span style={{marginLeft:5,fontSize:10}}>🔥{streak}</span>}
+          {bonus&&<span style={{marginLeft:5,fontSize:10}}>✨BONUS</span>}
+        </div>
+        {curQ&&<TimerRing seconds={timer} max={TIMER_SEC}/>}
+      </div>
+
+      {/* Classic: dice rolling message */}
+      {mode==="classic"&&picking&&!sdOn&&diceVal&&(
+        <div className="ci" style={{width:"100%",maxWidth:520,marginBottom:10,textAlign:"center"}}>
+          <div style={{fontSize:28,marginBottom:4}}>🎲 {diceVal}</div>
+          <p style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Pick a glowing cell on the board to move</p>
+        </div>
+      )}
+
+      {/* Classic: hub pick by opponent */}
+      {hubPick&&(<div className="ci" style={{width:"100%",maxWidth:520,marginBottom:14}}>
+        <div style={{background:"rgba(245,158,11,0.06)",borderRadius:20,padding:18,border:"1px solid rgba(245,158,11,0.2)"}}>
+          <div style={{textAlign:"center",marginBottom:12}}><div style={{fontSize:28,marginBottom:3}}>👑</div>
+            <p style={{fontSize:14,fontWeight:700,color:"#f59e0b"}}>Final Challenge!</p>
+            <p style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:3}}>{team===0?"Équipe 2":"Équipe 1"} picks the category:</p></div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:7}}>
+            {CATS.slice(0,6).map(cat=>(<button key={cat} className="cb" onClick={()=>hubStart(cat)}><span style={{fontSize:18}}>{CAT_META[cat].icon}</span><span style={{fontSize:9}}>{cat.split(" ")[0]}</span></button>))}
+          </div>
+        </div>
+      </div>)}
+
+      {/* Question card */}
+      {curQ&&!picking&&!hubPick&&(<div className={ca==="in"?"ci":ca==="out"?"co":""} style={{width:"100%",maxWidth:520}}>
+        <div className={timeUp&&!revealed?"gd":""} style={{...S.glass,borderTop:`3px solid hsl(${CAT_META[curQ.c]?.hue||0},70%,55%)`}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,0.06)",padding:"4px 11px",borderRadius:20,fontSize:10,color:"rgba(255,255,255,0.5)",fontWeight:600}}>
+              <span>{CAT_META[curQ.c]?.icon}</span><span>{curQ.c}</span>
+              {isHQ&&mode==="classic"&&!sdOn&&<span style={{color:"#f59e0b",marginLeft:3}}>🏠HQ</span>}
+              {hubQ&&<span style={{color:"#f59e0b",marginLeft:3}}>👑FINAL</span>}
+              {bonus&&mode==="hybrid"&&<span style={{color:"#f59e0b",marginLeft:3}}>✨BONUS</span>}
+            </div>
+            {!revealed&&!timeUp&&!mcMode&&jokers[team]&&!sdOn&&(
+              <button className="bt" onClick={useJoker} style={{background:"linear-gradient(135deg,#7c3aed,#a855f7)",borderRadius:10,padding:"4px 11px",color:"#fff",fontSize:10,fontWeight:700}}>🃏 Joker</button>)}
+          </div>
+
+          <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:20}}>
+            <p style={{fontSize:cl(17,21),fontWeight:600,lineHeight:1.5,color:"#fff",flex:1}}>{curQ.q}</p>
+            <button className="bt" onClick={()=>speak(curQ.q)} style={{background:"rgba(255,255,255,0.06)",borderRadius:10,padding:"6px 8px",color:"rgba(255,255,255,0.4)",fontSize:16,flexShrink:0,marginTop:2}} title="Read aloud">🔊</button>
+          </div>
+
+          {timeUp&&!revealed&&(<div className="shake" style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:12,padding:9,textAlign:"center",marginBottom:12}}><span style={{fontSize:14,fontWeight:700,color:"#ef4444"}}>⏰ Time's up!</span></div>)}
+
+          {/* Joker QCM mode */}
+          {mcMode&&!revealed&&!timeUp&&curQ.w&&(<div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>
+            {mcOptions.map((o,i)=>(<button key={i} className="mc" onClick={()=>{const ok=fuzzyMatch(o,curQ.a);setAnswerInput(o);setAnswerResult(ok?"correct":"wrong");setRevealed(true);stopT();}}><span style={{color:"rgba(255,255,255,0.3)",marginRight:7}}>{String.fromCharCode(65+i)}.</span>{o}</button>))}
+          </div>)}
+
+          {/* Text input answer zone */}
+          {!revealed&&!timeUp&&!mcMode&&(<div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <div style={{display:"flex",gap:8}}>
+              <input ref={answerRef} type="text" value={answerInput} onChange={e=>setAnswerInput(e.target.value)}
+                onKeyDown={e=>{if(e.key==="Enter")submitAnswer();}}
+                placeholder="Type your answer..."
+                autoFocus
+                style={{flex:1,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,padding:"12px 14px",color:"#fff",fontSize:14,fontWeight:600,outline:"none"}}/>
+              <button className="bt" onClick={submitAnswer} disabled={!answerInput.trim()} style={{background:answerInput.trim()?TC[team]:"rgba(255,255,255,0.06)",borderRadius:12,padding:"12px 18px",color:answerInput.trim()?"#fff":"rgba(255,255,255,0.2)",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>Submit</button>
+            </div>
+            <button className="bt" onClick={reveal} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:8,color:"rgba(255,255,255,0.25)",fontSize:11,fontWeight:600}}>Skip — reveal answer</button>
+          </div>)}
+
+          {/* Revealed: show result + answer + override buttons */}
+          {(revealed||timeUp)&&(<div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {/* Fuzzy match result banner */}
+            {answerResult&&(<div style={{background:answerResult==="correct"?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)",border:`1px solid ${answerResult==="correct"?"rgba(16,185,129,0.3)":"rgba(239,68,68,0.3)"}`,borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:20}}>{answerResult==="correct"?"✅":"❌"}</span>
+              <div><div style={{fontSize:12,fontWeight:700,color:answerResult==="correct"?"#10b981":"#ef4444"}}>{answerResult==="correct"?"Match!":"Not quite..."}</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:2}}>Your answer: <span style={{color:"rgba(255,255,255,0.7)",fontWeight:600}}>{answerInput}</span></div></div>
+            </div>)}
+            <div style={{background:"rgba(16,185,129,0.07)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:16,padding:14,textAlign:"center"}}>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:3,color:"#10b981",marginBottom:4}}>ANSWER</div>
+              <div style={{fontSize:cl(16,20),fontWeight:800}}>{curQ.a}</div>
+            </div>
+            {/* Auto-validated: show result + override */}
+            {answerResult?(<div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button className="bt" onClick={()=>handleAns(answerResult==="correct")} style={{width:"100%",background:answerResult==="correct"?"linear-gradient(135deg,#059669,#10b981)":"linear-gradient(135deg,#dc2626,#ef4444)",borderRadius:14,padding:13,color:"#fff",fontSize:14,fontWeight:700}}>{answerResult==="correct"?"✅ Continue — Correct!":"❌ Continue — Wrong"}</button>
+              <button className="bt" onClick={()=>handleAns(answerResult!=="correct")} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:8,color:"rgba(255,255,255,0.3)",fontSize:11,fontWeight:600}}>{answerResult==="correct"?"Override: mark as wrong":"Override: accept as correct"}</button>
+            </div>)
+            :(<div style={{display:"flex",gap:8}}>
+              <button className="bt" onClick={()=>handleAns(true)} style={{flex:1,background:"linear-gradient(135deg,#059669,#10b981)",borderRadius:14,padding:12,color:"#fff",fontSize:13,fontWeight:700}}>✅ Correct</button>
+              <button className="bt" onClick={()=>handleAns(false)} style={{flex:1,background:"linear-gradient(135deg,#dc2626,#ef4444)",borderRadius:14,padding:12,color:"#fff",fontSize:13,fontWeight:700}}>❌ Wrong</button>
+            </div>)}
+          </div>)}
+
+          {timeUp&&!revealed&&(<button className="bt" onClick={reveal} style={{width:"100%",background:"rgba(255,255,255,0.06)",borderRadius:14,padding:12,color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600,marginTop:6}}>Show answer</button>)}
+        </div>
+      </div>)}
+    </>)}
+
+    {/* ══ END ══ */}
+    {phase==="end"&&(<>
+      <Confetti active={true}/>
+      <div className="ci" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flex:1,textAlign:"center",maxWidth:460,width:"100%",zIndex:10}}>
+        <div style={{fontSize:60,marginBottom:8}}>{scores[0]!==scores[1]?"🏆":"🤝"}</div>
+        <h1 style={{fontSize:cl(24,30),fontWeight:800,marginBottom:24,lineHeight:1.3}}>
+          {scores[0]>scores[1]?"Équipe 1 wins!":scores[1]>scores[0]?"Équipe 2 wins!":"It's a tie!"}</h1>
+        <div style={{display:"flex",gap:18,marginBottom:24,flexWrap:"wrap",justifyContent:"center"}}>
+          {[0,1].map(i=>{const w=scores[i]>scores[1-i];return(
+            <div key={i} style={{background:"rgba(255,255,255,0.04)",border:w?`2px solid ${TC[i]}`:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"20px 30px",transform:w?"scale(1.05)":"scale(1)"}}>
+              <div style={{color:"rgba(255,255,255,0.5)",fontSize:12,fontWeight:600,marginBottom:6}}>{i===0?"🔵 Équipe 1":"🟠 Équipe 2"}</div>
+              <div style={{fontSize:44,fontWeight:900,color:"#fff",lineHeight:1}}>{scores[i]}</div>
+              <div style={{color:"rgba(255,255,255,0.2)",fontSize:13,marginTop:3}}>pts</div>
+              {mode==="classic"&&<div style={{marginTop:6,fontSize:10,color:"rgba(255,255,255,0.25)"}}>{wedges[i]?.length||0}/6 wedges</div>}
+            </div>);})}
+        </div>
+        {mode!=="classic"&&(<div style={{marginBottom:18,display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center"}}>
+          <p style={{width:"100%",fontSize:11,color:"rgba(255,255,255,0.25)",marginBottom:3}}>Want more?</p>
+          {[5,10].map(n=>(<button key={n} className="bt" onClick={()=>extendGame(n)} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"8px 18px",color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:600}}>+{n} questions</button>))}
+        </div>)}
+        <button className="bt" onClick={goHome} style={{background:"linear-gradient(135deg,#3b82f6,#7c3aed)",borderRadius:14,padding:"13px 30px",color:"#fff",fontSize:14,fontWeight:700,boxShadow:"0 6px 24px rgba(59,130,246,0.3)"}}>🔄 New Game</button>
+      </div>
+    </>)}
+
+    </div>
+  </>);
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
